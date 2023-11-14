@@ -4,6 +4,10 @@ const bcrypt = require("bcrypt");
 // Importar modelos
 const User = require("../models/user");
 
+// Importar servicios
+const jwt = require("../services/jwt");
+const user = require("../models/user");
+
 // Acciones de prueba
 const pruebaUser = (req, res) => {
     return res.status(200).send({
@@ -100,7 +104,7 @@ const login = async (req, res) => {
         })
     }
     // Conseguir el Token
-    const token = false;
+    const token = jwt.creat_token(searched_user);
 
     //Eliminar password del objeto 
     
