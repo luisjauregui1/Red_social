@@ -1,18 +1,50 @@
 // Importar dependencias y modulos
 const bcrypt = require("bcrypt");
-
+const mongoosePagination = require("mongoose-pagination")
 // Importar modelos
 const User = require("../models/user");
 
 // Importar servicios
 const jwt = require("../services/jwt");
-const user = require("../models/user");
+
 
 // Acciones de prueba
 const pruebaUser = (req, res) => {
     return res.status(200).send({
-        message: "Mensaje enviado desde: controllers/user.js"
+        message: "Mensaje enviado desde: controllers/user.js",
+        usuario: req.user
     })
+}
+
+
+const profile = async (req, res) => {
+    // recibir paramtero de id
+    try {
+        const id = req.params.id
+        // consulta de datos de usuario
+        let user_profile = await User.findById(id).select({ password: 0, role: 0 })
+
+        if (!user_profile) {
+            return res.status(404).send({
+                status: "error",
+                message: "El usuario no existe!"
+            })
+        }
+        // Devolver resultado
+        // posteriormente: devolver inforamcion de follows
+        return res.status(200).send({
+            status: "success",
+            user: user_profile
+        });
+    } catch (error) {
+        return res.status(404).send({
+            status: "error",
+            message: "Error al buscar user"
+        })
+    }
+
+
+
 }
 
 const register = async (req, res) => {
@@ -83,9 +115,9 @@ const login = async (req, res) => {
         })
     }
     // buscar en la base de datos
-    let searched_user = await User.findOne({ email: params.email })
-        // .select({ "password": 0 })
-        .exec()
+    let searched_user = await User.findOne({ email: params.email }).exec()
+    //.select({ "password": 0 }) "Esta consulta es para sacar password de mi body y que no se mueste en la consutal"
+
 
     if (!searched_user) {
         return res.status(404).send({
@@ -96,18 +128,19 @@ const login = async (req, res) => {
 
     // Comprobar su contraseña
     const pwd = bcrypt.compareSync(params.password, searched_user.password)
-    
+
     if (!pwd) {
         return res.status(400).send({
             status: "error",
             message: "No te haz identificado bien"
         })
     }
+
     // Conseguir el Token
     const token = jwt.creat_token(searched_user);
 
     //Eliminar password del objeto 
-    
+
 
     // Datos del usuario
     return res.status(200).send({
@@ -122,9 +155,56 @@ const login = async (req, res) => {
     })
 }
 
+const list = async (req, res) => {
+    try {
+        // Controlar la pagina que estamos
+        let page = 1;
+        if (req.params.page) {
+            page = req.params.page;
+        }
+        page = parseInt(page);
+
+        // Consulta con mongoose pagonate
+        let itesmPerPage = 5; // determina cuantos usuarios se mostraran en cada pagina.
+        let skip = (page - 1) * itesmPerPage; // Calcula cuantos usuarios se deben omitir en la consulta.
+
+        let count_users = await User.find('_id').count() // sacamos la cantidad de ususarios que tenemos en la base de datos
+
+        let users = await User.find().sort('name').skip(skip).limit(itesmPerPage)
+        
+        
+        if (!users) {
+            return res.status(404).send({
+                status: "error",
+                message: "No hay usuarios!"
+            })
+        }
+
+        // Devolver el resultado ( posteririomtent info de follows)
+        return res.status(200).send({
+            status: "success",
+            message: "Lista de usuarios",
+            count: users.length,
+            pages: Math.ceil(count_users/itesmPerPage),
+            users,
+            page,
+            itesmPerPage,
+            
+        })
+
+    } catch (error) {
+        return res.status(500).send({
+            status: "error",
+            message: "Error al obtener la lista de usuarios"
+        })
+    }
+}
+
 // Exportar acciones
 module.exports = {
     pruebaUser,
+    list,
     register,
-    login
+    login,
+    profile
 }
