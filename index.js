@@ -13,7 +13,7 @@ const app = express();
 const port = 3900;
 
 // Configurar cors
-app.use(cors())
+app.use(cors()) // Cross-Origin Resource Sharing
 
 // Convertir los datos del body a objetos js
 app.use(express.json()); // metodo json un middleware que nos decodificar los datos de body

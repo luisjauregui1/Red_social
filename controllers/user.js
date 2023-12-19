@@ -1,6 +1,6 @@
 // Importar dependencias y modulos
 const bcrypt = require("bcrypt");
-const mongoosePagination = require("mongoose-pagination")
+
 // Importar modelos
 const User = require("../models/user");
 
@@ -156,12 +156,14 @@ const login = async (req, res) => {
 }
 
 const list = async (req, res) => {
+
     try {
         // Controlar la pagina que estamos
         let page = 1;
         if (req.params.page) {
             page = req.params.page;
         }
+
         page = parseInt(page);
 
         // Consulta con mongoose pagonate
@@ -171,8 +173,8 @@ const list = async (req, res) => {
         let count_users = await User.find('_id').count() // sacamos la cantidad de ususarios que tenemos en la base de datos
 
         let users = await User.find().sort('name').skip(skip).limit(itesmPerPage)
-        
-        
+
+
         if (!users) {
             return res.status(404).send({
                 status: "error",
@@ -185,11 +187,11 @@ const list = async (req, res) => {
             status: "success",
             message: "Lista de usuarios",
             count: users.length,
-            pages: Math.ceil(count_users/itesmPerPage),
+            pages: Math.ceil(count_users / itesmPerPage),
             users,
             page,
             itesmPerPage,
-            
+
         })
 
     } catch (error) {
@@ -200,11 +202,116 @@ const list = async (req, res) => {
     }
 }
 
+// const update = async (req, res) => {
+
+//     // Recoger ingo del usuario a actualizar
+//     let userIdentity = req.user;
+//     let userToUpdate = req.body;
+
+//     // Comprobar si el usuario ya existe
+//     const duplicated_user = await User.find({
+//         $or: [
+//             { email: userToUpdate.email },
+//             { nick: userToUpdate.nick }
+//         ]
+//     }).exec();
+
+//     if (duplicated_user && duplicated_user.length > 0) {
+//         // Verificar si hay algún usuario que no sea el actual
+//         const isDuplicate = duplicated_user.some(user => user._id != userIdentity.id);
+
+//         if (isDuplicate) {
+//             return res.status(200).send({
+//                 status: "error",
+//                 message: "There is already a registered user with that name or email"
+//             });
+//         }
+//     }
+
+//     let userIsSet = false;
+
+//     duplicated_user.forEach(user => {
+//         if (user && user._id != userIdentity.id) userIsSet = true;
+//     });
+
+//     if (userIsSet) {
+//         return res.status(200).send({
+//             status: "succes",
+//             message: "There is already a registered user with that name or email"
+//         })
+//     }
+
+//     if (userToUpdate.password) {
+//         let pwd = await bcrypt.hash(userToUpdate.password, 10)
+//         userToUpdate.password = pwd;
+//         // Si me llega la passw cifrarlo    
+//     }
+
+//     try {
+//         let userUpdated = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
+//         if (!userUpdated) {
+//             return res.tatus(500).send({
+//                 status: 'error',
+//                 message: 'Update user method has failed',
+//             })
+//         }
+//         return res.status(200).send({
+//             status: 'success',
+//             message: 'Update user method',
+//             user: userUpdated
+//         })
+
+//     } catch (error) {
+//         return res.status(400).send({
+//             status: "error",
+//             message: "error al actualizar"
+//         })
+//     }
+// }
+
+const update = async (req, res) => {
+    let userIdentity = req.user;
+    let userToUpdate = req.body;
+
+    delete userIdentity.iat;
+    delete userIdentity.exp;
+    delete userIdentity.image;
+    delete userIdentity.role;
+
+
+    console.log("esto es userIdentity", + userIdentity)
+    console.log("esto es userToUpdate", + userToUpdate)
+
+    try {
+        
+        let duplicated_user = await User.findOne({
+            $or: [
+                {email: userToUpdate.email.toLowerCase()},
+                {nick: userToUpdate.nick.toLowerCase() }
+            ]
+        })
+
+        
+        return res.status(200).send({
+            status: "succes",
+            message: "Todo correcto",
+            userIdentity,
+            userToUpdate
+        })
+    
+    } catch (error) {
+        
+    }
+
+    
+}
+
 // Exportar acciones
 module.exports = {
     pruebaUser,
     list,
     register,
     login,
-    profile
+    profile,
+    update
 }

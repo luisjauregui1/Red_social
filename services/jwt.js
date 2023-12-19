@@ -9,12 +9,12 @@ const secret = "CLAVE_SECRETA_del_proyecto_DE_LA_RED_SOCIAL_1234";
 const creat_token = (user) => {
     const payload = {
         id: user._id,
+        name: user.name,
         surname: user.surname,
-        name: user.surname,
         nick: user.nick,
         email: user.email,
         role: user.role,
-        imange: user.image,
+        image: user.image,
         iat: moment().unix(),              // hace referencia al mommento que creamos este payload        
         exp: moment().add(30, "days").unix()  // es la fecha de expiracion de este token
     };
