@@ -7,6 +7,7 @@ const User = require("../models/user");
 // Importar servicios
 const jwt = require("../services/jwt");
 const user = require("../models/user");
+const { param } = require("../routers/user");
 
 
 // Acciones de prueba
@@ -172,8 +173,8 @@ const list = async (req, res) => {
         let count_users = await User.find('_id').count() // sacamos la cantidad de ususarios que tenemos en la base de datos
 
         let users = await User.find().sort('name').skip(skip).limit(itesmPerPage)
-        
-        
+
+
         if (!users) {
             return res.status(404).send({
                 status: "error",
@@ -186,11 +187,11 @@ const list = async (req, res) => {
             status: "success",
             message: "Lista de usuarios",
             count: users.length,
-            pages: Math.ceil(count_users/itesmPerPage),
+            pages: Math.ceil(count_users / itesmPerPage),
             users,
             page,
             itesmPerPage,
-            
+
         })
 
     } catch (error) {
@@ -205,7 +206,7 @@ const update = async (req, res) => {
 
     // Recoger datos del usuario
     let userIdentity = req.user
-    let update_information = req.body
+    let userToUpdate = req.body
     // elimiar campos sobrantes
     delete userIdentity.id
     delete userIdentity.image
@@ -217,15 +218,46 @@ const update = async (req, res) => {
     // Comprobar si el usario existe
     // si me llega la password cifrarla
     // Buscar y actualizar user con informacion nueva
+    // consulta
+    try {
+        let user_duplicated = await User.findOne({
+            $or: [
+                { email: userToUpdate.email },
+                { nick: userToUpdate.nick }
+            ]
+        }).exec()
+
+        if (user_duplicated) {
+            return res.status(200).send({
+                status: "success",
+                message: "The user has been exist"
+            })
+        }
+        // si llega el password
+        if (userToUpdate.password) {
+            let pwd = await bcrypt.hash(userToUpdate.password, 10);
+            userToUpdate.password = pwd;
+        }
+        // buscar y actualizar
+        let userUpdate = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
+
+        return res.status(200).send({
+            status: "success",
+            message: "Actualizacion exitosa",
+            userIdentity,
+            user_duplicated,
+            user: userUpdate
+
+        })
+
+    } catch (error) {
+        return res.status(400).send({
+            status: 'Error',
+            messaje: "Error en la consulta"
+        })
+    }
 
 
-    return res.status(200).send({
-        status: "success",
-        message: "Actualizacion exitosa",
-        userIdentity,
-        update_information
-        
-    })
 
 }
 
