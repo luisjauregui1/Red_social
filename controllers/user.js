@@ -6,6 +6,8 @@ const User = require("../models/user");
 
 // Importar servicios
 const jwt = require("../services/jwt");
+const user = require("../models/user");
+const { param } = require("../routers/user");
 
 
 // Acciones de prueba
@@ -202,6 +204,7 @@ const list = async (req, res) => {
     }
 }
 
+<<<<<<< HEAD
 // const update = async (req, res) => {
 
 //     // Recoger ingo del usuario a actualizar
@@ -304,6 +307,65 @@ const update = async (req, res) => {
     }
 
     
+=======
+const update = async (req, res) => {
+
+    // Recoger datos del usuario
+    let userIdentity = req.user
+    let userToUpdate = req.body
+    // elimiar campos sobrantes
+    delete userIdentity.id
+    delete userIdentity.image
+    delete userIdentity.iat
+    delete userIdentity.exp
+    delete userIdentity.role
+
+
+    // Comprobar si el usario existe
+    // si me llega la password cifrarla
+    // Buscar y actualizar user con informacion nueva
+    // consulta
+    try {
+        let user_duplicated = await User.findOne({
+            $or: [
+                { email: userToUpdate.email },
+                { nick: userToUpdate.nick }
+            ]
+        }).exec()
+
+        if (user_duplicated) {
+            return res.status(200).send({
+                status: "success",
+                message: "The user has been exist"
+            })
+        }
+        // si llega el password
+        if (userToUpdate.password) {
+            let pwd = await bcrypt.hash(userToUpdate.password, 10);
+            userToUpdate.password = pwd;
+        }
+        // buscar y actualizar
+        let userUpdate = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
+
+        return res.status(200).send({
+            status: "success",
+            message: "Actualizacion exitosa",
+            userIdentity,
+            user_duplicated,
+            user: userUpdate
+
+        })
+
+    } catch (error) {
+        return res.status(400).send({
+            status: 'Error',
+            messaje: "Error en la consulta"
+        })
+    }
+
+
+
+>>>>>>> f45123f42e5ac3d0757bb048fe7d1293b5f232f0
 }
 
 // Exportar acciones
@@ -314,4 +376,8 @@ module.exports = {
     login,
     profile,
     update
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> f45123f42e5ac3d0757bb048fe7d1293b5f232f0
