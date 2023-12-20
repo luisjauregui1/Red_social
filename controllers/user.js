@@ -6,6 +6,7 @@ const User = require("../models/user");
 
 // Importar servicios
 const jwt = require("../services/jwt");
+const user = require("../models/user");
 
 
 // Acciones de prueba
@@ -200,11 +201,40 @@ const list = async (req, res) => {
     }
 }
 
+const update = async (req, res) => {
+
+    // Recoger datos del usuario
+    let userIdentity = req.user
+    let update_information = req.body
+    // elimiar campos sobrantes
+    delete userIdentity.id
+    delete userIdentity.image
+    delete userIdentity.iat
+    delete userIdentity.exp
+    delete userIdentity.role
+
+
+    // Comprobar si el usario existe
+    // si me llega la password cifrarla
+    // Buscar y actualizar user con informacion nueva
+
+
+    return res.status(200).send({
+        status: "success",
+        message: "Actualizacion exitosa",
+        userIdentity,
+        update_information
+        
+    })
+
+}
+
 // Exportar acciones
 module.exports = {
     pruebaUser,
     list,
     register,
     login,
-    profile
+    profile,
+    update
 }

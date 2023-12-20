@@ -18,7 +18,7 @@ const auth = (req, res, next) => {
 
     // limpiar token
     let token = req.headers.authorization.replace(/['"]+/g, '');
-    
+
     // Decodificar el token
     try {
 
