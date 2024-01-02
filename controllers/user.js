@@ -7,8 +7,14 @@ const User = require("../models/user");
 // Importar servicios
 const jwt = require("../services/jwt");
 const user = require("../models/user");
-const { param } = require("../routers/user");
 
+const test_simple = (req, res) => {
+    console.log('Usando test_simple')
+    return res.status(200).send({
+        status: 'Success',
+        message: 'Hola mundo. User /test',
+    })
+}
 
 // Acciones de prueba
 const pruebaUser = (req, res) => {
@@ -204,110 +210,6 @@ const list = async (req, res) => {
     }
 }
 
-<<<<<<< HEAD
-// const update = async (req, res) => {
-
-//     // Recoger ingo del usuario a actualizar
-//     let userIdentity = req.user;
-//     let userToUpdate = req.body;
-
-//     // Comprobar si el usuario ya existe
-//     const duplicated_user = await User.find({
-//         $or: [
-//             { email: userToUpdate.email },
-//             { nick: userToUpdate.nick }
-//         ]
-//     }).exec();
-
-//     if (duplicated_user && duplicated_user.length > 0) {
-//         // Verificar si hay algún usuario que no sea el actual
-//         const isDuplicate = duplicated_user.some(user => user._id != userIdentity.id);
-
-//         if (isDuplicate) {
-//             return res.status(200).send({
-//                 status: "error",
-//                 message: "There is already a registered user with that name or email"
-//             });
-//         }
-//     }
-
-//     let userIsSet = false;
-
-//     duplicated_user.forEach(user => {
-//         if (user && user._id != userIdentity.id) userIsSet = true;
-//     });
-
-//     if (userIsSet) {
-//         return res.status(200).send({
-//             status: "succes",
-//             message: "There is already a registered user with that name or email"
-//         })
-//     }
-
-//     if (userToUpdate.password) {
-//         let pwd = await bcrypt.hash(userToUpdate.password, 10)
-//         userToUpdate.password = pwd;
-//         // Si me llega la passw cifrarlo    
-//     }
-
-//     try {
-//         let userUpdated = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
-//         if (!userUpdated) {
-//             return res.tatus(500).send({
-//                 status: 'error',
-//                 message: 'Update user method has failed',
-//             })
-//         }
-//         return res.status(200).send({
-//             status: 'success',
-//             message: 'Update user method',
-//             user: userUpdated
-//         })
-
-//     } catch (error) {
-//         return res.status(400).send({
-//             status: "error",
-//             message: "error al actualizar"
-//         })
-//     }
-// }
-
-const update = async (req, res) => {
-    let userIdentity = req.user;
-    let userToUpdate = req.body;
-
-    delete userIdentity.iat;
-    delete userIdentity.exp;
-    delete userIdentity.image;
-    delete userIdentity.role;
-
-
-    console.log("esto es userIdentity", + userIdentity)
-    console.log("esto es userToUpdate", + userToUpdate)
-
-    try {
-        
-        let duplicated_user = await User.findOne({
-            $or: [
-                {email: userToUpdate.email.toLowerCase()},
-                {nick: userToUpdate.nick.toLowerCase() }
-            ]
-        })
-
-        
-        return res.status(200).send({
-            status: "succes",
-            message: "Todo correcto",
-            userIdentity,
-            userToUpdate
-        })
-    
-    } catch (error) {
-        
-    }
-
-    
-=======
 const update = async (req, res) => {
 
     // Recoger datos del usuario
@@ -365,19 +267,15 @@ const update = async (req, res) => {
 
 
 
->>>>>>> f45123f42e5ac3d0757bb048fe7d1293b5f232f0
 }
 
 // Exportar acciones
 module.exports = {
+    test_simple,
     pruebaUser,
     list,
     register,
     login,
     profile,
     update
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> f45123f42e5ac3d0757bb048fe7d1293b5f232f0
