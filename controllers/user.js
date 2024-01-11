@@ -210,63 +210,71 @@ const list = async (req, res) => {
     }
 }
 
+// Update de usuarios
 const update = async (req, res) => {
 
-    // Recoger datos del usuario
-    let userIdentity = req.user
-    let userToUpdate = req.body
-    // elimiar campos sobrantes
-    delete userIdentity.id
-    delete userIdentity.image
-    delete userIdentity.iat
-    delete userIdentity.exp
-    delete userIdentity.role
+    // Recoger info del usuario a actualizar
+    const userIdentity = req.user;
+    // UserTouPDATE son los que nos envia el cliente y los de arriba los que tenemos
+    const userToUpdate = req.body;
+    //Eliminar campos sobrantes que no se deban actualizar
+    delete userIdentity.iat;
+    delete userIdentity.exp;
+    delete userIdentity.role;
+    delete userIdentity.image;
+    console.log(userToUpdate);
 
-
-    // Comprobar si el usario existe
-    // si me llega la password cifrarla
-    // Buscar y actualizar user con informacion nueva
-    // consulta
-    try {
-        let user_duplicated = await User.findOne({
-            $or: [
-                { email: userToUpdate.email },
-                { nick: userToUpdate.nick }
-            ]
-        }).exec()
-
-        if (user_duplicated) {
-            return res.status(200).send({
-                status: "success",
-                message: "The user has been exist"
-            })
-        }
-        // si llega el password
-        if (userToUpdate.password) {
-            let pwd = await bcrypt.hash(userToUpdate.password, 10);
-            userToUpdate.password = pwd;
-        }
-        // buscar y actualizar
-        let userUpdate = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
-
-        return res.status(200).send({
-            status: "success",
-            message: "Actualizacion exitosa",
-            userIdentity,
-            user_duplicated,
-            user: userUpdate
-
-        })
-
-    } catch (error) {
+    if (Object.keys(userToUpdate).length === 0){
+        console.log("DataBody it's empty")
         return res.status(400).send({
-            status: 'Error',
-            messaje: "Error en la consulta"
+            status: "error",
+            message: "No enviaste datos para actualizar",
+            userToUpdate,
+            userIdentity
         })
     }
 
 
+    // Comprobar si el usuario ya existe
+    const duplicated_user = await User.find({
+        $or: [
+            { email: userToUpdate.email },
+            { nick: userToUpdate.nick }
+        ]
+    }).exec()
+    let userIsset = false;
+    duplicated_user.forEach(user => {
+        if (user && user._id != userIdentity.id) userIsset = true;
+    });
 
+    if (userIsset) {
+        return res.status(200).send({
+            status: "success",
+            message: "There is already a registered user with that name or email"
+        })
+    }
+
+    // Si llega la contrasena 
+    if (userToUpdate.password) {
+        let pwd = await bcrypt.hash(userToUpdate.password, 10)
+        userToUpdate.password = pwd;
+        // Si me llega la passw cifrarlo    
+    }
+
+    // Buscar y actualizar 
+    let userUpdated = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
+    if (!userUpdated) {
+        return res.tatus(400).send({
+            status: 'error',
+            message: 'Update user method has failed',
+        })
+    }
+
+    return res.status(200).send({
+        status: 'success',
+        message: 'Update user method',
+        user: userUpdated
+    })
 }
 
 // Exportar acciones
