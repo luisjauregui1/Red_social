@@ -1,12 +1,15 @@
 // Importar dependencias y modulos
 const bcrypt = require("bcrypt");
+const fs = require("fs")
+const path = require("path")
 
 // Importar modelos
 const User = require("../models/user");
 
 // Importar servicios
 const jwt = require("../services/jwt");
-const user = require("../models/user");
+const { error } = require("console");
+
 
 const test_simple = (req, res) => {
     console.log('Usando test_simple')
@@ -224,7 +227,7 @@ const update = async (req, res) => {
     delete userIdentity.image;
     console.log(userToUpdate);
 
-    if (Object.keys(userToUpdate).length === 0){
+    if (Object.keys(userToUpdate).length === 0) {
         console.log("DataBody it's empty")
         return res.status(400).send({
             status: "error",
@@ -277,6 +280,72 @@ const update = async (req, res) => {
     })
 }
 
+
+const upload = async (req, res) => {
+
+    // Recoger el fichero de imagen y comprobar que existe
+    if (!req.file) {
+        return res.status(404).send({
+            status: "error",
+            message: "peticion no incluye la imagen"
+        });
+    };
+    // consgueti el nombre del archivo
+    let image = req.file.originalname;
+    // sacar la extension del archivo
+    const imageSplit = image.split("\.");
+    const extension = imageSplit[1];
+    // comprobar extension
+    if (extension != 'png' && extension != 'jpg' && extension != 'jpeg') {
+        // si no es correcta, borrar archivo
+        let filePath = req.file.path;
+        let fileDeleted = fs.unlinkSync(filePath);
+        // Devolver respuesta negativa
+        return res.status(400).send({
+            status: "error",
+            message: "Extension del fichero invalidad",
+        })
+    }
+    // si es correcta, guardar imagen en base de datos
+    let updateUser = await User.findByIdAndUpdate(req.user.id, { image: req.file.filename }, { new: true })
+    if (!updateUser) {
+        return res.status(500).send({
+            status: "error",
+            message: "Error al intentar actualizar nombre"
+        })
+    }
+    // devolver respuesta
+    return res.status(200).send({
+        status: "success",
+        user: updateUser,
+        file: req.file,
+    })
+}
+
+const avatar = async (req, res) => {
+    // sacar el parametro de la url 
+    const file = req.params.file;
+
+    // montar el path real de la imagen
+    const filePath = "./upload/avatars/" + file;
+    // comprobar que existe
+    await fs.stat(filePath, (error,exist) => {
+        console.log(filePath)
+        if(!exist){
+            return res.status(400).send({
+                status: "Error",
+                message: "No existe la ruta"
+            })
+        };
+
+        // Devolver un file
+        
+        return res.sendFile(path.resolve(filePath));
+
+    })
+      
+}
+
 // Exportar acciones
 module.exports = {
     test_simple,
@@ -285,5 +354,7 @@ module.exports = {
     register,
     login,
     profile,
-    update
+    update,
+    upload,
+    avatar
 }
