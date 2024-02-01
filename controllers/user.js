@@ -265,7 +265,7 @@ const update = async (req, res) => {
     }
 
     // Buscar y actualizar 
-    let userUpdated = await User.findByIdAndUpdate(userIdentity.id, userToUpdate, { new: true })
+    let userUpdated = await User.findByIdAndUpdate({_id: userIdentity.id}, userToUpdate, { new: true })
     if (!userUpdated) {
         return res.tatus(400).send({
             status: 'error',
@@ -307,7 +307,7 @@ const upload = async (req, res) => {
         })
     }
     // si es correcta, guardar imagen en base de datos
-    let updateUser = await User.findByIdAndUpdate(req.user.id, { image: req.file.filename }, { new: true })
+    let updateUser = await User.findByIdAndUpdate({_id: req.user.id}, { image: req.file.filename }, { new: true })
     if (!updateUser) {
         return res.status(500).send({
             status: "error",
@@ -322,6 +322,7 @@ const upload = async (req, res) => {
     })
 }
 
+
 const avatar = async (req, res) => {
     // sacar el parametro de la url 
     const file = req.params.file;
@@ -329,7 +330,7 @@ const avatar = async (req, res) => {
     // montar el path real de la imagen
     const filePath = "./upload/avatars/" + file;
     // comprobar que existe
-    await fs.stat(filePath, (error,exist) => {
+    fs.stat(filePath, (error,exist) => {
         console.log(filePath)
         if(!exist){
             return res.status(400).send({
